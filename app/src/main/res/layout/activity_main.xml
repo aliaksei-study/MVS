@@ -12,4 +12,11 @@
         android:layout_width="match_parent"
         android:layout_height="300dp"
         />
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph2"
+
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        />
 </LinearLayout>

@@ -12,12 +12,23 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 import org.apache.commons.math3.distribution.WeibullDistribution;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 public class MainActivity extends AppCompatActivity {
     private final Handler mHandler = new Handler();
     private Runnable mTimer;
     private double graphLastXValue = 1024d;
     private LineGraphSeries<DataPoint> series;
+    private LineGraphSeries<DataPoint> series2;
     private double[] weibullDistributionArray;
+    private double[] weibullSample = new double[1024];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,20 +36,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         WeibullDistribution weibullDistribution = new WeibullDistribution(1, 1);
         weibullDistributionArray = weibullDistribution.sample(16384);
-        System.out.println(getWeibullNumber(1));
-        System.out.println(getWeibullNumber(2));
-        System.out.println(getWeibullNumber(3));
-        System.out.println(getWeibullNumber(4));
-        System.out.println(getWeibullNumber(5));
-        System.out.println(getWeibullNumber(6));
-        System.out.println(getWeibullNumber(7));
-        System.out.println(getWeibullNumber(8));
-        System.out.println(getWeibullNumber(9));
-        System.out.println(getWeibullNumber(10));
-        System.out.println(getWeibullNumber(11));
-        System.out.println(getWeibullNumber(12));
-        System.out.println(getWeibullNumber(13));
-        System.out.println(getWeibullNumber(14));
+        for(int i = 0; i < weibullSample.length; i++) {
+            weibullSample[i] = getWeibullNumber();
+        }
 
         GraphView graph = findViewById(R.id.graph);
         series = new LineGraphSeries<>(getDataPoint(weibullDistributionArray));
@@ -55,6 +55,44 @@ public class MainActivity extends AppCompatActivity {
         graph.addSeries(series);
         graph.getLegendRenderer().setVisible(true);
         graph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
+
+
+        Map<Double, Integer> occurences = new TreeMap<>();
+        for(Double value: weibullDistributionArray) {
+            Integer count = occurences.get(value);
+            if(count == null) {
+                occurences.put(value, 1);
+            } else {
+                occurences.put(value, ++count);
+            }
+        }
+
+
+        GraphView graph2 = findViewById(R.id.graph2);
+        series2 = new LineGraphSeries<>(getDataPoint(occurences));
+        graph2.getViewport().setYAxisBoundsManual(true);
+        graph2.getViewport().setMinY(0);
+        graph2.getViewport().setMaxY(10);
+
+        graph2.getViewport().setXAxisBoundsManual(true);
+        graph2.getViewport().setMinX(0);
+        graph2.getViewport().setMaxX(16000);
+
+        series2.setTitle("Рандом");
+
+        graph2.addSeries(series2);
+        graph2.getLegendRenderer().setVisible(true);
+        graph2.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
+    }
+
+    private DataPoint[] getDataPoint(Map<Double, Integer> occur) {
+        DataPoint[] dataPoints = new DataPoint[occur.size()];
+        Iterator<Map.Entry<Double, Integer>> entryIterator = occur.entrySet().iterator();
+        for(int i = 0; i < occur.size(); i++) {
+            Map.Entry<Double, Integer> entry = entryIterator.next();
+            dataPoints[i] = new DataPoint(i, entry.getValue());
+        }
+        return dataPoints;
     }
 
     private DataPoint[] getDataPoint(double[] dataArray) {
@@ -89,7 +127,8 @@ public class MainActivity extends AppCompatActivity {
         return weibullDistributionArray[index];
     }
 
-    public double getWeibullNumber(int x) {
-        return (5) * Math.pow(1, 4) * Math.exp(-(Math.pow(x, 5)));
+    public double getWeibullNumber() {
+        Random generator = new Random();
+        return Math.sqrt(-5*Math.log(1-generator.nextDouble()));
     }
 }
