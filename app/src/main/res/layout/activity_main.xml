@@ -8,13 +8,13 @@
     tools:context=".MainActivity" >
 
     <com.jjoe64.graphview.GraphView
-        android:id="@+id/graph"
+        android:id="@+id/sample_graph"
         android:layout_width="match_parent"
         android:layout_height="300dp"
         />
 
     <com.jjoe64.graphview.GraphView
-        android:id="@+id/graph2"
+        android:id="@+id/one_dimensional_graph"
 
         android:layout_width="match_parent"
         android:layout_height="200dp"

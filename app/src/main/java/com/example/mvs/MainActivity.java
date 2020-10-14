@@ -12,23 +12,17 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 import org.apache.commons.math3.distribution.WeibullDistribution;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.TreeMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
     private final Handler mHandler = new Handler();
     private Runnable mTimer;
     private double graphLastXValue = 1024d;
-    private LineGraphSeries<DataPoint> series;
-    private LineGraphSeries<DataPoint> series2;
+    private LineGraphSeries<DataPoint> sampleGraphSeries;
+    private LineGraphSeries<DataPoint> oneDimensionalSeries;
     private double[] weibullDistributionArray;
-    private double[] weibullSample = new double[1024];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,68 +30,48 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         WeibullDistribution weibullDistribution = new WeibullDistribution(1, 1);
         weibullDistributionArray = weibullDistribution.sample(16384);
-        for(int i = 0; i < weibullSample.length; i++) {
-            weibullSample[i] = getWeibullNumber();
-        }
 
-        GraphView graph = findViewById(R.id.graph);
-        series = new LineGraphSeries<>(getDataPoint(weibullDistributionArray));
-        graph.getViewport().setYAxisBoundsManual(true);
-        graph.getViewport().setMinY(0);
-        graph.getViewport().setMaxY(10);
+        GraphView sampleGraph = findViewById(R.id.sample_graph);
+        sampleGraphSeries = new LineGraphSeries<>(getDataPoint(weibullDistributionArray, 1024));
+        sampleGraph.addSeries(sampleGraphSeries);
+        sampleGraphSeries.setTitle("Распределение Вейбулла");
+        configureGraph(sampleGraph, 0, 0, 1024, 10);
 
-        graph.getViewport().setXAxisBoundsManual(true);
-        graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(1024);
-
-        series.setTitle("Распределение Вейбулла");
-
-        graph.addSeries(series);
-        graph.getLegendRenderer().setVisible(true);
-        graph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
-
-
-        Map<Double, Integer> occurences = new TreeMap<>();
-        for(Double value: weibullDistributionArray) {
-            Integer count = occurences.get(value);
-            if(count == null) {
-                occurences.put(value, 1);
-            } else {
-                occurences.put(value, ++count);
-            }
-        }
-
-
-        GraphView graph2 = findViewById(R.id.graph2);
-        series2 = new LineGraphSeries<>(getDataPoint(occurences));
-        graph2.getViewport().setYAxisBoundsManual(true);
-        graph2.getViewport().setMinY(0);
-        graph2.getViewport().setMaxY(10);
-
-        graph2.getViewport().setXAxisBoundsManual(true);
-        graph2.getViewport().setMinX(0);
-        graph2.getViewport().setMaxX(16000);
-
-        series2.setTitle("Рандом");
-
-        graph2.addSeries(series2);
-        graph2.getLegendRenderer().setVisible(true);
-        graph2.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
+        GraphView oneDimensionalGraph = findViewById(R.id.one_dimensional_graph);
+        oneDimensionalSeries = new LineGraphSeries<>(getDataPoint(getListOfOneDimensionalHistogramValues(weibullDistributionArray, 0, 256)));
+        oneDimensionalGraph.addSeries(oneDimensionalSeries);
+        oneDimensionalSeries.setTitle("Одномерная гистограмма");
+        configureGraph(oneDimensionalGraph, 0, 0, 256, 100);
     }
 
-    private DataPoint[] getDataPoint(Map<Double, Integer> occur) {
-        DataPoint[] dataPoints = new DataPoint[occur.size()];
-        Iterator<Map.Entry<Double, Integer>> entryIterator = occur.entrySet().iterator();
-        for(int i = 0; i < occur.size(); i++) {
-            Map.Entry<Double, Integer> entry = entryIterator.next();
-            dataPoints[i] = new DataPoint(i, entry.getValue());
+    private List<Integer> getListOfOneDimensionalHistogramValues(double[] weibullDistributionArray,
+                                                                 int firstBorder, int secondBorder) {
+        return null;
+    }
+
+    private void configureGraph(GraphView graph, int minX, int minY, int maxX, int maxY) {
+        graph.getViewport().setYAxisBoundsManual(true);
+        graph.getViewport().setMinY(minY);
+        graph.getViewport().setMaxY(maxY);
+
+        graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setMinX(minX);
+        graph.getViewport().setMaxX(maxX);
+        graph.getLegendRenderer().setVisible(true);
+        graph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
+    }
+
+    private DataPoint[] getDataPoint(List<Integer> histogramValues) {
+        DataPoint[] dataPoints = new DataPoint[histogramValues.size()];
+        for(int i = 0; i < histogramValues.size(); i++) {
+            dataPoints[i] = new DataPoint(i, histogramValues.get(i));
         }
         return dataPoints;
     }
 
-    private DataPoint[] getDataPoint(double[] dataArray) {
-        DataPoint[] dataPoints = new DataPoint[1024];
-        for (int i = 0; i < 1024; i++) {
+    private DataPoint[] getDataPoint(double[] dataArray, int length) {
+        DataPoint[] dataPoints = new DataPoint[length];
+        for (int i = 0; i < length; i++) {
             dataPoints[i] = new DataPoint(i, dataArray[i]);
         }
         return dataPoints;
@@ -109,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 graphLastXValue += 1d;
-                series.appendData(new DataPoint(graphLastXValue, getRandom((int) graphLastXValue)), true, 16250);
-                if(graphLastXValue != 16250) {
+                sampleGraphSeries.appendData(new DataPoint(graphLastXValue, getRandom((int) graphLastXValue)), true, 16383);
+                if(graphLastXValue != 16383) {
                     mHandler.postDelayed(this, 1);
                 }
             }
@@ -125,10 +99,5 @@ public class MainActivity extends AppCompatActivity {
 
     public double getRandom(int index) {
         return weibullDistributionArray[index];
-    }
-
-    public double getWeibullNumber() {
-        Random generator = new Random();
-        return Math.sqrt(-5*Math.log(1-generator.nextDouble()));
     }
 }
