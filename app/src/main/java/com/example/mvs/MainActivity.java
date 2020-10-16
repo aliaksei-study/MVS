@@ -19,9 +19,13 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     private final Handler mHandler = new Handler();
     private Runnable sampleGraphRunnable;
+    private Runnable oneDimensionalGraphRunnable;
     private double graphLastXValue = 1024d;
     private LineGraphSeries<DataPoint> sampleGraphSeries;
     private double[] weibullDistributionArray;
+    private List<List<Integer>> oneDimensionalHistograms = new ArrayList<>();
+    GraphView oneDimensionalGraph;
+    private int oneDimensionalGraphCounter = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +40,11 @@ public class MainActivity extends AppCompatActivity {
         sampleGraphSeries.setTitle("Распределение Вейбулла");
         configureGraph(sampleGraph, 0, 0, 1024, 10);
 
-        GraphView oneDimensionalGraph = findViewById(R.id.one_dimensional_graph);
-        LineGraphSeries<DataPoint> oneDimensionalSeries = new LineGraphSeries<>(getDataPoint(getListOfOneDimensionalHistogramValues(weibullDistributionArray, 0, 256)));
+        oneDimensionalGraph = findViewById(R.id.one_dimensional_graph);
+        for (int i = 0, j = 256; j < weibullDistributionArray.length - 256; i++, j++) {
+            oneDimensionalHistograms.add(getListOfOneDimensionalHistogramValues(weibullDistributionArray, i, j));
+        }
+        LineGraphSeries<DataPoint> oneDimensionalSeries = new LineGraphSeries<>(getDataPoint(oneDimensionalHistograms.get(0)));
         oneDimensionalGraph.addSeries(oneDimensionalSeries);
         oneDimensionalSeries.setTitle("Одномерная гистограмма");
         configureGraph(oneDimensionalGraph, 0, 0, 256, 40);
@@ -47,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
         int frequency;
         int listIndex;
         List<Integer> occurences = new ArrayList<>(Collections.nCopies(secondBorder - firstBorder, 0));
-        for(int i = firstBorder; i < secondBorder; i++) {
-            listIndex = (int)(weibullDistributionArray[i] * 10);
+        for (int i = firstBorder; i < secondBorder; i++) {
+            listIndex = (int) (weibullDistributionArray[i] * 10);
             frequency = occurences.get(listIndex);
             occurences.remove(listIndex);
             occurences.add(listIndex, ++frequency);
@@ -70,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
     private DataPoint[] getDataPoint(List<Integer> histogramValues) {
         DataPoint[] dataPoints = new DataPoint[histogramValues.size()];
-        for(int i = 0; i < histogramValues.size(); i++) {
+        for (int i = 0; i < histogramValues.size(); i++) {
             dataPoints[i] = new DataPoint(i, histogramValues.get(i));
         }
         return dataPoints;
@@ -91,12 +98,24 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 graphLastXValue += 1d;
                 sampleGraphSeries.appendData(new DataPoint(graphLastXValue, getRandom((int) graphLastXValue)), true, 16383);
-                if(graphLastXValue != 16383) {
+                if (graphLastXValue != 16383) {
+                    mHandler.postDelayed(this, 1);
+                }
+            }
+        };
+        oneDimensionalGraphRunnable = new Runnable() {
+            @Override
+            public void run() {
+                oneDimensionalGraph.removeAllSeries();
+                oneDimensionalGraph.addSeries(new LineGraphSeries<>(getDataPoint(oneDimensionalHistograms.get(oneDimensionalGraphCounter))));
+                oneDimensionalGraphCounter++;
+                if (oneDimensionalGraphCounter != 16383) {
                     mHandler.postDelayed(this, 1);
                 }
             }
         };
         mHandler.postDelayed(sampleGraphRunnable, 1500);
+        mHandler.postDelayed(oneDimensionalGraphRunnable, 1500);
     }
 
     public void onPause() {
