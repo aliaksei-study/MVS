@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         drawView = findViewById(R.id.draw_view);
-        WeibullDistribution weibullDistribution = new WeibullDistribution(1, 1);
+        WeibullDistribution weibullDistribution = new WeibullDistribution(5, 5);
         weibullDistributionArray = weibullDistribution.sample(16384);
 
         GraphView sampleGraph = findViewById(R.id.sample_graph);

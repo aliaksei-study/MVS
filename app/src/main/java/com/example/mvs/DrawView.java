@@ -20,57 +20,32 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DrawView extends View {
-    Paint paint;
-    Path path;
-    private HashMap<Path, Paint> paths = new HashMap<>();
     List<List<Integer>> oneDimensionalHistograms;
     private int maxValue;
-    private Canvas mCanvas;
-    private Bitmap mBitmap;
 
     public DrawView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        mBitmap = BitmapFactory.decodeResource(getResources(), R.layout.activity_main);
     }
 
     public void init(List<List<Integer>> oneDimensionalHistograms, int maxValue) {
-        mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(mBitmap);
-
         this.oneDimensionalHistograms = oneDimensionalHistograms;
         this.maxValue = maxValue;
-        path = new Path();
-        path.moveTo(20, 20);
-        path.lineTo(30,20);
-        paint = new Paint();
-        paint.setStrokeWidth(20);
-        paint.setColor(defineRGBColorByCollectionElement(2));
-        paths.put(path, paint);
-
-        path = new Path();
-        path.moveTo(30, 20);
-        path.lineTo(40,20);
-        paint = new Paint();
-        paint.setStrokeWidth(20);
-        paint.setColor(defineRGBColorByCollectionElement(10));
-        paths.put(path, paint);
-
-        path = new Path();
-        path.moveTo(40, 20);
-        path.lineTo(50,20);
-        paint = new Paint();
-        paint.setStrokeWidth(20);
-        paint.setColor(defineRGBColorByCollectionElement(25));
-        paths.put(path, paint);
     }
 
     @Override
     public void onDraw(Canvas canvas) {
-        canvas.save();
-        mCanvas.drawColor(Color.WHITE);
-        paths.entrySet().forEach(entry -> mCanvas.drawPath(entry.getKey(), entry.getValue()));
-        canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
-        canvas.restore();
+        float startX = 0.f;
+        float startY = 0.f;
+        List<Integer> histogram;
+        for(int i = 0; i < (Math.min(oneDimensionalHistograms.size(), 256)); i++) {
+            startY += 5;
+            histogram = oneDimensionalHistograms.get(i);
+            for(int j = 0; j < histogram.size(); j++) {
+                startX += 5;
+                drawLineWithSelectedColor(canvas, defineRGBColorByCollectionElement(histogram.get(j)), startX, startY);
+            }
+            startX = 0.f;
+        }
     }
 
     private int defineRGBColorByCollectionElement(int collectionElement) {
@@ -82,9 +57,9 @@ public class DrawView extends View {
 
     private void drawLineWithSelectedColor(Canvas canvas, int color, float x, float y) {
         Paint mpaint = new Paint();
-        mpaint.setStrokeWidth(20);
+        mpaint.setStrokeWidth(5);
         mpaint.setColor(color);
-        canvas.drawLine(x, y, x + 20, y, mpaint);
+        canvas.drawLine(x, y, x + 5, y, mpaint);
     }
 
 }
