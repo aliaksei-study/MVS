@@ -1,22 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll"
+    android:layout_width="fill_parent"
+
+    android:layout_height="fill_parent"
+    >
+<LinearLayout xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    tools:context=".MainActivity" >
+    tools:context=".MainActivity">
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/sample_graph"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        />
+        android:layout_height="300dp" />
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/one_dimensional_graph"
 
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        />
+        android:layout_height="200dp" />
+
+    <com.example.mvs.DrawView
+        android:id="@+id/draw_view"
+        android:layout_width="match_parent"
+        android:layout_height="300dp" />
+
 </LinearLayout>
+</ScrollView>

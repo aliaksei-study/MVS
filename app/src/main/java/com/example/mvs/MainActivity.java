@@ -2,6 +2,7 @@ package com.example.mvs;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -26,11 +27,13 @@ public class MainActivity extends AppCompatActivity {
     private List<List<Integer>> oneDimensionalHistograms = new ArrayList<>();
     GraphView oneDimensionalGraph;
     private int oneDimensionalGraphCounter = 1;
+    private DrawView drawView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        drawView = findViewById(R.id.draw_view);
         WeibullDistribution weibullDistribution = new WeibullDistribution(1, 1);
         weibullDistributionArray = weibullDistribution.sample(16384);
 
@@ -48,7 +51,19 @@ public class MainActivity extends AppCompatActivity {
         oneDimensionalGraph.addSeries(oneDimensionalSeries);
         oneDimensionalSeries.setTitle("Одномерная гистограмма");
         configureGraph(oneDimensionalGraph, 0, 0, 256, 40);
+        drawView.init(oneDimensionalHistograms, findMaxValueInFirst100Collections());
     }
+
+    private int findMaxValueInFirst100Collections() {
+        int maxValue = 0;
+        int currentMaxValue;
+        for(int i = 0; i < (Math.min(oneDimensionalHistograms.size(), 100)); i++) {
+            currentMaxValue = Collections.max(oneDimensionalHistograms.get(i));
+            maxValue = Math.max(currentMaxValue, maxValue);
+        }
+        return maxValue;
+    }
+
 
     private List<Integer> getListOfOneDimensionalHistogramValues(double[] weibullDistributionArray, int firstBorder, int secondBorder) {
         int frequency;
