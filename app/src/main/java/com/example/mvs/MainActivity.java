@@ -1,8 +1,12 @@
 package com.example.mvs;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -28,6 +32,31 @@ public class MainActivity extends AppCompatActivity {
     GraphView oneDimensionalGraph;
     private int oneDimensionalGraphCounter = 1;
     private DrawView drawView;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.second_task:
+                Intent firstIntent = new Intent(this, SecondTaskActivity.class);
+                startActivity(firstIntent);
+                finish();
+                return true;
+            case R.id.first_task:
+                Intent secondIntent = new Intent(this, MainActivity.class);
+                startActivity(secondIntent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,8 +141,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 graphLastXValue += 1d;
-                sampleGraphSeries.appendData(new DataPoint(graphLastXValue, getRandom((int) graphLastXValue)), true, 16383);
-                if (graphLastXValue != 16383) {
+                sampleGraphSeries.appendData(new DataPoint(graphLastXValue, getRandom((int) graphLastXValue)), true, 15000);
+                if (graphLastXValue != 15000) {
                     mHandler.postDelayed(this, 1);
                 }
             }
@@ -122,10 +151,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 oneDimensionalGraph.removeAllSeries();
-                oneDimensionalGraph.addSeries(new LineGraphSeries<>(getDataPoint(oneDimensionalHistograms.get(oneDimensionalGraphCounter))));
-                oneDimensionalGraphCounter++;
-                if (oneDimensionalGraphCounter != 16383) {
-                    mHandler.postDelayed(this, 1);
+                if(oneDimensionalHistograms.size() > oneDimensionalGraphCounter) {
+                    oneDimensionalGraph.addSeries(new LineGraphSeries<>(getDataPoint(oneDimensionalHistograms.get(oneDimensionalGraphCounter))));
+                    oneDimensionalGraphCounter++;
+                    if (oneDimensionalGraphCounter != 15000) {
+                        mHandler.postDelayed(this, 1);
+                    }
                 }
             }
         };

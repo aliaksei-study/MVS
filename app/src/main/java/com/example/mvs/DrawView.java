@@ -49,8 +49,6 @@ public class DrawView extends View {
     }
 
     private int defineRGBColorByCollectionElement(int collectionElement) {
-        System.out.println(maxValue);
-        System.out.println(collectionElement);
         int RGB = (collectionElement * 255) / this.maxValue == 0 ? 1 : this.maxValue;
         return Color.rgb(RGB, RGB, RGB);
     }

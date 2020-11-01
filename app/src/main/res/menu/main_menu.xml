@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/second_task"
+        android:title="Второе задание" />
+    <item android:id="@+id/first_task"
+        android:title="Первое задание" />
+
+</menu>
