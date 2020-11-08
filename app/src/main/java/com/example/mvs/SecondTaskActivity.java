@@ -100,4 +100,4 @@ public class SecondTaskActivity extends AppCompatActivity {
         int pixel = bitmap.getPixel(1,1);
         System.out.println(Color.red(pixel));
     }
-}
+} 
