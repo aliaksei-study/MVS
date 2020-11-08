@@ -2,6 +2,7 @@ package com.example.mvs;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -11,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -69,7 +71,7 @@ public class SecondTaskActivity extends AppCompatActivity {
 
                 Uri selectedImageURI = data.getData();
 
-                Picasso.get().load(selectedImageURI).into(imageView);
+                Picasso.get().load(selectedImageURI).resize(256, 300).into(imageView);
             }
 
         }
@@ -95,7 +97,7 @@ public class SecondTaskActivity extends AppCompatActivity {
         imageView.setDrawingCacheEnabled(true);
         imageView.buildDrawingCache(true);
         bitmap = imageView.getDrawingCache();
-        System.out.println(bitmap.getWidth());
-        System.out.println(bitmap.getHeight());
+        int pixel = bitmap.getPixel(1,1);
+        System.out.println(Color.red(pixel));
     }
 }
