@@ -33,6 +33,7 @@ public class SecondTaskActivity extends AppCompatActivity {
     private Button calculate;
     private ImageView imageView;
     private Bitmap bitmap;
+    private GraphView container;
     private GraphView oneDimensionalOfImageGraph;
     private GraphView probabilityFunctionGraph;
     private GraphView afterCalculatingProbabilityGraph;
@@ -44,6 +45,7 @@ public class SecondTaskActivity extends AppCompatActivity {
         loadImage = findViewById(R.id.load_image);
         calculate = findViewById(R.id.calculate);
         imageView = findViewById(R.id.portrait);
+        container = findViewById(R.id.container);
         oneDimensionalOfImageGraph = findViewById(R.id.one_dimensional_image_graph);
         probabilityFunctionGraph = findViewById(R.id.probability_function_graph);
         afterCalculatingProbabilityGraph = findViewById(R.id.after_probability_calculated_graph);
@@ -103,13 +105,66 @@ public class SecondTaskActivity extends AppCompatActivity {
         });
         calculate.setOnClickListener((view) -> {
             int[] extractedRedArray = extractRedFromEachImagePixel();
-            //Map<Integer, Integer> elementOccurrences = buildOneDimensionalHistogramByArray(extractedRedArray);
-            drawOneDimensionalHistogram(extractedRedArray);
-            double[] probabilityArray = getProbabilityFunctionArray(extractedRedArray);
+            drawContainer(extractedRedArray);
+            Map<Integer, Integer> elementOccurrences = buildOneDimensionalHistogramByArray(extractedRedArray);
+            drawOneDimensionalHistogram(elementOccurrences);
+            double[] probabilityArray = getProbabilityFunctionArray(elementOccurrences);
             drawProbabilityHistogram(probabilityArray);
-            int[] equalizationArray = buildEqualizationArray(probabilityArray);
-            drawEqualizationHistogram(equalizationArray);
+            int[] equalizedArray = equalizeArray(extractedRedArray, probabilityArray);
+            drawEqualizedArray(equalizedArray);
+//            int[] equalizationArray = buildEqualizationArray(probabilityArray);
+//            drawEqualizationHistogram(equalizationArray);
         });
+    }
+
+    private void drawEqualizedArray(int[] equalizedArray) {
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(fillEqualizedDataPoints(equalizedArray));
+        afterCalculatingProbabilityGraph.getViewport().setYAxisBoundsManual(true);
+        afterCalculatingProbabilityGraph.getViewport().setMinY(0);
+        afterCalculatingProbabilityGraph.getViewport().setMaxY(255);
+        afterCalculatingProbabilityGraph.getViewport().setXAxisBoundsManual(true);
+        afterCalculatingProbabilityGraph.getViewport().setMinX(0);
+        afterCalculatingProbabilityGraph.getViewport().setMaxX(256);
+        afterCalculatingProbabilityGraph.addSeries(series);
+    }
+
+    private DataPoint[] fillEqualizedDataPoints(int[] equalizedArray) {
+        final int dataPointsSize = 256;
+        DataPoint[] dataPoints = new DataPoint[dataPointsSize];
+        for (int i = 0; i < dataPointsSize; i++) {
+            dataPoints[i] = new DataPoint(i, equalizedArray[i]);
+        }
+        return dataPoints;
+    }
+
+    private int[] equalizeArray(int[] extractedRedArray, double[] probabilityArray) {
+        int[] equalizationArray = new int[256];
+        final double cubeOf255 = 6.34133;
+        final int probabilitySize = 256;
+        for(int i = 0; i < probabilitySize; i++) {
+            equalizationArray[i] = (int) Math.pow(probabilityArray[i] * cubeOf255, 3);
+        }
+        return equalizationArray;
+    }
+
+    private void drawContainer(int[] extractedRedArray) {
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(fillContainerDataPoints(extractedRedArray));
+        container.getViewport().setYAxisBoundsManual(true);
+        container.getViewport().setMinY(0);
+        container.getViewport().setMaxY(255);
+        container.getViewport().setXAxisBoundsManual(true);
+        container.getViewport().setMinX(0);
+        container.getViewport().setMaxX(10000);
+        container.addSeries(series);
+    }
+
+    private DataPoint[] fillContainerDataPoints(int[] extractedRedArray) {
+        final int dataPointsSize = 10000;
+        DataPoint[] dataPoints = new DataPoint[dataPointsSize];
+        for (int i = 0; i < dataPointsSize; i++) {
+            dataPoints[i] = new DataPoint(i, extractedRedArray[i]);
+        }
+        return dataPoints;
     }
 
     private int[] buildEqualizationArray(double[] probabilityArray) {
@@ -140,12 +195,14 @@ public class SecondTaskActivity extends AppCompatActivity {
 
     //calculate numbers for probability histogram, only for 10000 elements, because further elements will be equal to 1
     // each element of int[] divided by 10000 in case to increase width of function
-    private double[] getProbabilityFunctionArray(int[] extractedRedArray) {
-        final int probabilityArraySize = 4000;
+    private double[] getProbabilityFunctionArray(Map<Integer, Integer> occurrencesMap) {
+        final int probabilityArraySize = 256;
         double[] probabilityArray = new double[probabilityArraySize];
         double arrayElement = 0.0;
+        Integer currentElement;
         for(int i = 0; i < probabilityArraySize; i++) {
-            probabilityArray[i] = (double) extractedRedArray[i] / 100000.0d;
+            currentElement = occurrencesMap.get(i);
+            probabilityArray[i] = (double) ((currentElement == null? 0 : currentElement) / 65536.0d);
             arrayElement = probabilityArray[i == 0 ? 0 : i - 1] + probabilityArray[i];
             probabilityArray[i] = arrayElement > 1 ? 1 : arrayElement;
         }
@@ -168,12 +225,12 @@ public class SecondTaskActivity extends AppCompatActivity {
         probabilityFunctionGraph.getViewport().setMaxY(1);
         probabilityFunctionGraph.getViewport().setXAxisBoundsManual(true);
         probabilityFunctionGraph.getViewport().setMinX(0);
-        probabilityFunctionGraph.getViewport().setMaxX(4000);
+        probabilityFunctionGraph.getViewport().setMaxX(256);
         probabilityFunctionGraph.addSeries(series);
     }
 
     private DataPoint[] fillProbabilityDataPoints(double[] probabilityArray) {
-        final int dataPointsSize = 4000;
+        final int dataPointsSize = 256;
         DataPoint[] dataPoints = new DataPoint[dataPointsSize];
         for (int i = 0; i < dataPointsSize; i++) {
             dataPoints[i] = new DataPoint(i, probabilityArray[i]);
@@ -181,22 +238,24 @@ public class SecondTaskActivity extends AppCompatActivity {
         return dataPoints;
     }
 
-    private void drawOneDimensionalHistogram(int[] extractedRedArray) {
-        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(fillDataPoints(extractedRedArray));
+    private void drawOneDimensionalHistogram(Map<Integer, Integer> occurrencesMap) {
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(fillDataPoints(occurrencesMap));
         oneDimensionalOfImageGraph.getViewport().setYAxisBoundsManual(true);
         oneDimensionalOfImageGraph.getViewport().setMinY(0);
-        oneDimensionalOfImageGraph.getViewport().setMaxY(255);
+        oneDimensionalOfImageGraph.getViewport().setMaxY(1000);
         oneDimensionalOfImageGraph.getViewport().setXAxisBoundsManual(true);
         oneDimensionalOfImageGraph.getViewport().setMinX(0);
-        oneDimensionalOfImageGraph.getViewport().setMaxX(10000);
+        oneDimensionalOfImageGraph.getViewport().setMaxX(256);
         oneDimensionalOfImageGraph.addSeries(series);
     }
 
-    private DataPoint[] fillDataPoints(int[] extractedRedArray) {
-        final int dataPointSize = 10000;
+    private DataPoint[] fillDataPoints(Map<Integer, Integer> elementOccurrences) {
+        final int dataPointSize = 256;
         DataPoint[] dataPoints = new DataPoint[dataPointSize];
+        Integer currentElement;
         for (int i = 0; i < dataPointSize; i++) {
-            dataPoints[i] = new DataPoint(i, extractedRedArray[i]);
+            currentElement = elementOccurrences.get(i);
+            dataPoints[i] = new DataPoint(i, currentElement == null ? 0 : currentElement);
         }
         return dataPoints;
     }
