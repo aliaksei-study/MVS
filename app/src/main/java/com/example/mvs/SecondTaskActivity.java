@@ -37,6 +37,7 @@ public class SecondTaskActivity extends AppCompatActivity {
     private GraphView oneDimensionalOfImageGraph;
     private GraphView probabilityFunctionGraph;
     private GraphView afterCalculatingProbabilityGraph;
+    private GraphView newProbabilityGraph;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,6 +50,7 @@ public class SecondTaskActivity extends AppCompatActivity {
         oneDimensionalOfImageGraph = findViewById(R.id.one_dimensional_image_graph);
         probabilityFunctionGraph = findViewById(R.id.probability_function_graph);
         afterCalculatingProbabilityGraph = findViewById(R.id.after_probability_calculated_graph);
+        newProbabilityGraph = findViewById(R.id.new_probability_function);
         setOnClickListeners();
     }
 
@@ -110,25 +112,41 @@ public class SecondTaskActivity extends AppCompatActivity {
             drawOneDimensionalHistogram(elementOccurrences);
             double[] probabilityArray = getProbabilityFunctionArray(elementOccurrences);
             drawProbabilityHistogram(probabilityArray);
-            int[] equalizedArray = equalizeArray(extractedRedArray, probabilityArray);
+            //int[] equalizedArray = equalizeArray(extractedRedArray, probabilityArray); поменял на double
+            double[] equalizedArray = equalizeArray(extractedRedArray, probabilityArray);
             drawEqualizedArray(equalizedArray);
 //            int[] equalizationArray = buildEqualizationArray(probabilityArray);
 //            drawEqualizationHistogram(equalizationArray);
+
         });
     }
 
-    private void drawEqualizedArray(int[] equalizedArray) {
+    private double[] getLastProbabilityFunctionArray(int[] equalizedArray) {
+        final int probabilityArraySize = 256;
+        double[] probabilityArray = new double[probabilityArraySize];
+        double arrayElement = 0.0;
+        Integer currentElement;
+        for(int i = 0; i < probabilityArraySize; i++) {
+            currentElement = equalizedArray[i];
+            probabilityArray[i] = (double) ((currentElement == null? 0 : currentElement) / 256.0d);
+            arrayElement = probabilityArray[i == 0 ? 0 : i - 1] + probabilityArray[i];
+            probabilityArray[i] = arrayElement > 1 ? 1 : arrayElement;
+        }
+        return probabilityArray;
+    }
+
+    private void drawEqualizedArray(double[] equalizedArray) {
         LineGraphSeries<DataPoint> series = new LineGraphSeries<>(fillEqualizedDataPoints(equalizedArray));
         afterCalculatingProbabilityGraph.getViewport().setYAxisBoundsManual(true);
         afterCalculatingProbabilityGraph.getViewport().setMinY(0);
-        afterCalculatingProbabilityGraph.getViewport().setMaxY(255);
+        afterCalculatingProbabilityGraph.getViewport().setMaxY(1000);
         afterCalculatingProbabilityGraph.getViewport().setXAxisBoundsManual(true);
         afterCalculatingProbabilityGraph.getViewport().setMinX(0);
         afterCalculatingProbabilityGraph.getViewport().setMaxX(256);
         afterCalculatingProbabilityGraph.addSeries(series);
     }
 
-    private DataPoint[] fillEqualizedDataPoints(int[] equalizedArray) {
+    private DataPoint[] fillEqualizedDataPoints(double[] equalizedArray) {
         final int dataPointsSize = 256;
         DataPoint[] dataPoints = new DataPoint[dataPointsSize];
         for (int i = 0; i < dataPointsSize; i++) {
@@ -137,14 +155,21 @@ public class SecondTaskActivity extends AppCompatActivity {
         return dataPoints;
     }
 
-    private int[] equalizeArray(int[] extractedRedArray, double[] probabilityArray) {
-        int[] equalizationArray = new int[256];
+    private double[] equalizeArray(int[] extractedRedArray, double[] probabilityArray) {
+        double[] equalizationArray = new double[256];
         final double cubeOf255 = 6.34133;
         final int probabilitySize = 256;
         for(int i = 0; i < probabilitySize; i++) {
-            equalizationArray[i] = (int) Math.pow(probabilityArray[i] * cubeOf255, 3);
+            equalizationArray[i] = Math.pow(probabilityArray[i] * cubeOf255, 3);
         }
-        return equalizationArray;
+
+
+
+        double[] resultArray = new double[256];
+        for(int i = 0; i < probabilitySize; i++) {
+            resultArray[i] = ((Math.pow(equalizationArray[i], -(2.f/3)) / cubeOf255) / 3);
+        }
+        return resultArray;
     }
 
     private void drawContainer(int[] extractedRedArray) {

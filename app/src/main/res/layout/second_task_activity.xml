@@ -53,5 +53,10 @@
         android:id="@+id/after_probability_calculated_graph"
         android:layout_width="match_parent"
         android:layout_height="200dp" />
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/new_probability_function"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" />
 </LinearLayout>
 </ScrollView>
